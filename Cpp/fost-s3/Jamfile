@@ -1,0 +1,7 @@
+
+fost-lib-autotest fost-s3
+    : Cpp/fost-s3
+    :
+        ../../../fost-base/Cpp/fost-crypto
+        ../../../fost-internet/Cpp/fost-inet
+    ;
