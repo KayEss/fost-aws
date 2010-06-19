@@ -92,8 +92,8 @@ bool fostlib::aws::s3::file_info::exists() const {
     return m_response->status() == 200;
 }
 nullable< string > fostlib::aws::s3::file_info::md5() const {
-    if ( exists() && m_response->body().headers().exists(L"ETag") )
-        return m_response->body().headers()[L"ETag"].value();
+    if ( exists() && m_response->body()->headers().exists(L"ETag") )
+        return m_response->body()->headers()[L"ETag"].value();
     else
         return null;
 }
