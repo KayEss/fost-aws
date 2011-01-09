@@ -9,7 +9,7 @@ fost-project fost-aws :
     ;
 
 alias docs :
-        Docs//fost-aws.html
+        Docs
     ;
 explicit docs ;
 
