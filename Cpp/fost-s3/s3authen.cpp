@@ -18,8 +18,7 @@ void fostlib::aws::s3::rest_authentication(
     const string &account, const ascii_string &bucket,
     http::user_agent::request &request
 ) {
-    hmac signature(sha1, setting< string >::value(
-        L"S3 account/" + account, L"API secret"));
+    hmac signature(sha1, account_setting< string >(account, L"API secret"));
     signature << request.method() << "\n";
 
     if ( request.headers().exists("Content-MD5") )
@@ -36,7 +35,7 @@ void fostlib::aws::s3::rest_authentication(
         coerce< string >( request.address().pathspec().underlying() );
 
     request.headers().set("Authorization", L"AWS " +
-        setting< string >::value(L"S3 account/" + account, L"API key") + L":" +
+        account_setting< string >(account, L"API key") + L":" +
         coerce< string >( coerce< base64_string >( signature.digest() ) ));
 }
 

@@ -29,6 +29,12 @@ namespace fostlib {
                 http::user_agent::request &request);
 
 
+            /// Return the setting value of the requested type for the named account
+            template<typename V>
+            inline V account_setting(const string &account,  wliteral name) {
+                return setting<V>::value(L"S3 account/" + account, name);
+            }
+
 
             class FOST_AWS_DECLSPEC file_info {
                 boost::shared_ptr< http::user_agent::response > m_response;
