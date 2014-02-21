@@ -17,7 +17,7 @@ using namespace fostlib;
 
 FSL_MAIN(
     L"s3put",
-    L"Amazon S3 client -- push to S3\nCopyright (C) 2008-2009, Felspar Co. Ltd."
+    L"Amazon S3 client -- push to S3\nCopyright (C) 2008-2014, Felspar Co. Ltd."
 )( fostlib::ostream &o, fostlib::arguments &args ) {
     // Check we have the minimum number of command line arguments
     if ( args.size() < 4 ) {
