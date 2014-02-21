@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2010, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2009-2014, Felspar Co Ltd. http://fost.3.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -7,6 +7,7 @@
 
 
 #include "fost-aws.hpp"
+#include <fost/insert>
 #include <fost/s3.hpp>
 
 #include <boost/lambda/bind.hpp>
@@ -25,11 +26,23 @@ const setting< string > fostlib::aws::s3::bucket::s_account_name(
     "Amazon S3", "Default account name", "default", true);
 
 namespace {
-    std::auto_ptr< http::user_agent::response > s3do(const http::user_agent &ua, http::user_agent::request &request) {
+    std::auto_ptr< http::user_agent::response > s3do(
+        const http::user_agent &ua, http::user_agent::request &request
+    ) {
         std::auto_ptr< http::user_agent::response > response = ua(request);
         if ( response->status() == 403 ) {
             exceptions::not_implemented exception("S3 request resulting in 403 forbidden");
-            exception.info() << response->body() << std::endl;
+            insert(exception.data(), "ua", "base", ua.base());
+            insert(exception.data(), "request", "url", request.address());
+            json rj;
+            insert(rj, "body", "size", response->body()->data().size());
+            insert(rj, "body", "data",
+                coerce<string>(response->body()->data()));
+            for (mime::mime_headers::const_iterator it(response->headers().begin());
+                    it != response->headers().end(); ++it) {
+                push_back(rj, "headers", it->first, it->second.value());
+            }
+            insert(exception.data(), "response", rj);
             throw exception;
         }
         return response;
