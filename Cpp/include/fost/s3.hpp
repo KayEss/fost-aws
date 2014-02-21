@@ -34,6 +34,11 @@ namespace fostlib {
             inline V account_setting(const string &account,  wliteral name) {
                 return setting<V>::value(L"S3 account/" + account, name);
             }
+            /// Return the setting value of the requested type for the named account
+            template<typename V>
+            inline nullable<V> account_setting(const string &account,  wliteral name,  t_null) {
+                return setting<V>::value(L"S3 account/" + account, name,  null);
+            }
 
 
             class FOST_AWS_DECLSPEC file_info {
