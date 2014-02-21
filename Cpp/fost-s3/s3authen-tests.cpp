@@ -30,7 +30,7 @@ FSL_TEST_SUITE( s3_authentication );
 
 
 FSL_TEST_FUNCTION( get ) {
-    aws::s3::bucket bucket(ascii_string("johnsmith"));
+    aws::s3::bucket bucket(ascii_printable_string("johnsmith"));
     http::user_agent::request request("GET", url("http://johnsmith.s3.amazonaws.com/photos/puppy.jpg"));
     request.headers().set("Date", L"Tue, 27 Mar 2007 19:36:42 +0000");
     request.headers().set("Content-Type", L"");

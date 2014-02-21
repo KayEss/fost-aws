@@ -15,7 +15,7 @@ using namespace fostlib::aws::s3;
 
 
 void fostlib::aws::s3::rest_authentication(
-    const string &account, const ascii_string &bucket,
+    const string &account, const ascii_printable_string &bucket,
     http::user_agent::request &request
 ) {
     hmac signature(sha1, account_setting< string >(account, L"API secret"));

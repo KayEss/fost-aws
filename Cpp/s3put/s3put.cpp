@@ -1,5 +1,5 @@
 /*
-    Copyright 2008-2010, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2008-2014, Felspar Co Ltd. http://fost.3.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -25,7 +25,7 @@ FSL_MAIN(
         return 1;
     }
     // Create the bucket object
-    aws::s3::bucket bucket(coerce< ascii_string >( args[2] ));
+    aws::s3::bucket bucket(coerce< ascii_printable_string >( args[2] ));
     // Local file information
     digester md5_digest(md5);
     md5_digest << coerce< boost::filesystem::wpath >( args[1].value() );

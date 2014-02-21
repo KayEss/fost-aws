@@ -25,7 +25,7 @@ namespace fostlib {
 
 
             void FOST_AWS_DECLSPEC rest_authentication(
-                const string &account, const ascii_string &bucket,
+                const string &account, const ascii_printable_string &bucket,
                 http::user_agent::request &request);
 
 
@@ -39,7 +39,8 @@ namespace fostlib {
             class FOST_AWS_DECLSPEC file_info {
                 boost::shared_ptr< http::user_agent::response > m_response;
                 public:
-                    file_info(const http::user_agent &, const ascii_string &bucket,
+                    file_info(const http::user_agent &,
+                        const ascii_printable_string &bucket,
                         const boost::filesystem::wpath &);
 
                     accessors< const boost::filesystem::wpath > path;
@@ -54,9 +55,9 @@ namespace fostlib {
                 public:
                     static const setting< string > s_account_name;
 
-                    explicit bucket(const ascii_string &name);
+                    bucket(const ascii_printable_string &name);
 
-                    accessors< const ascii_string > name;
+                    accessors< const ascii_printable_string > name;
 
                     file_info stat(const boost::filesystem::wpath &) const;
                     void put(const boost::filesystem::wpath &file,

@@ -37,10 +37,8 @@ namespace {
 }
 
 
-fostlib::aws::s3::bucket::bucket(const ascii_string &name)
-: m_ua(url(coerce< string >(
-        ascii_string("https://") + name +
-            ascii_string(".s3.amazonaws.com/") ))), name( name ) {
+fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
+: m_ua(base_url(name)), name( name ) {
     m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(
             boost::lambda::bind(
                 rest_authentication, s_account_name.value(), name, boost::lambda::_1)));
@@ -77,7 +75,7 @@ namespace {
         return s3do(ua, r);
     }
 }
-fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_string &bucket, const boost::filesystem::wpath &location )
+fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_printable_string &bucket, const boost::filesystem::wpath &location )
 : m_response( init_file_info(ua, url(ua.base(), location)).release() ), path( location ) {
     switch ( m_response->status() ) {
         case 200:
