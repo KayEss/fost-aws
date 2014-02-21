@@ -22,8 +22,7 @@ using namespace fostlib::aws::s3;
 
 const setting< string > fostlib::aws::s3::bucket::s_account_name(
     "fost-internet/Cpp/fost-aws/s3.cpp",
-    "Amazon S3", "Default account name", "default", true
-);
+    "Amazon S3", "Default account name", "default", true);
 
 namespace {
     std::auto_ptr< http::user_agent::response > s3do(const http::user_agent &ua, http::user_agent::request &request) {
@@ -38,11 +37,13 @@ namespace {
 }
 
 
-fostlib::aws::s3::bucket::bucket( const ascii_string &name )
-: m_ua(url(coerce< string >( ascii_string("https://") + name + ascii_string(".s3.amazonaws.com/") ))), name( name ) {
-    m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(boost::lambda::bind(
-        rest_authentication, s_account_name.value(), name, boost::lambda::_1
-    )));
+fostlib::aws::s3::bucket::bucket(const ascii_string &name)
+: m_ua(url(coerce< string >(
+        ascii_string("https://") + name +
+            ascii_string(".s3.amazonaws.com/") ))), name( name ) {
+    m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(
+            boost::lambda::bind(
+                rest_authentication, s_account_name.value(), name, boost::lambda::_1)));
 }
 
 
