@@ -55,7 +55,7 @@ namespace {
                 ascii_printable_string("https://") + bucket +
                     ascii_printable_string(".s3.amazonaws.com/")));
         } else {
-            return url(url(base.value()), url::filepath_string(bucket));
+            return url(url(base.value()), url::filepath_string(bucket + "/"));
         }
     }
 }
