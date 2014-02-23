@@ -34,8 +34,7 @@ void fostlib::aws::s3::rest_authentication(
 
     signature << request.headers()["Date"].value() << "\n";
 
-    signature << "/" << coerce< string >( bucket ) <<
-        coerce< string >( request.address().pathspec().underlying() );
+    signature << coerce< string >( request.address().pathspec().underlying() );
 
     request.headers().set("Authorization", L"AWS " +
         account_setting< string >(account, L"API key") + L":" +
