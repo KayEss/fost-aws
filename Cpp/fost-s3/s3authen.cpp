@@ -19,14 +19,17 @@ void fostlib::aws::s3::rest_authentication(
     http::user_agent::request &request
 ) {
     hmac signature(sha1, account_setting< string >(account, L"API secret"));
+
     signature << request.method() << "\n";
 
-    if ( request.headers().exists("Content-MD5") )
+    if ( request.headers().exists("Content-MD5") ) {
         signature << request.headers()["Content-MD5"].value();
+    }
     signature << "\n";
 
-    if ( request.headers().exists("Content-Type") )
+    if ( request.headers().exists("Content-Type") ) {
         signature << request.headers()["Content-Type"].value();
+    }
     signature << "\n";
 
     signature << request.headers()["Date"].value() << "\n";
