@@ -77,7 +77,7 @@ file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &locatio
 
 
 void fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const {
-    http::user_agent::request request("PUT", url(m_ua.base(), location), file);
+    http::user_agent::request request("PUT", url(m_ua.base(), m_ua.base().pathspec() +coerce<url::filepath_string>(location)), file);
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
@@ -102,7 +102,7 @@ namespace {
     }
 }
 fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_printable_string &bucket, const boost::filesystem::wpath &location )
-: m_response( init_file_info(ua, url(ua.base(), location)).release() ), path( location ) {
+: m_response( init_file_info(ua, url(ua.base(), ua.base().pathspec() + coerce<url::filepath_string>(location))).release() ), path( location ) {
     switch ( m_response->status() ) {
         case 200:
         case 404:
@@ -122,3 +122,4 @@ nullable< string > fostlib::aws::s3::file_info::md5() const {
     else
         return null;
 }
+
