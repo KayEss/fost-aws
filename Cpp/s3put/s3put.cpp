@@ -35,7 +35,8 @@ FSL_MAIN(
     aws::s3::file_info remote(bucket.stat(coerce< boost::filesystem::wpath >( args[3].value() )));
     o << "Remote file MD5 " << remote.md5().value(L"[No remote file MD5]") << std::endl;
     // Decide if we're going to upload the file or not
-    if ( !remote.exists() || remote.md5() != L"\"" + local_md5 + L"\"" ) {
+    if ( !remote.exists() ||
+            (remote.md5() != local_md5 && remote.md5() != L"\"" + local_md5 + L"\"") ) {
         o << L"Uploading file..." << std::endl;
         bucket.put(coerce< boost::filesystem::wpath >( args[1].value() ), remote.path());
         o << L"Upload complete" << std::endl;
