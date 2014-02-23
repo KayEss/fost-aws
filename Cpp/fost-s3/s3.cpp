@@ -31,16 +31,23 @@ namespace {
     ) {
         std::auto_ptr< http::user_agent::response > response = ua(request);
         if ( response->status() == 403 ) {
-            exceptions::not_implemented exception("S3 request resulting in 403 forbidden");
+            exceptions::not_implemented exception("S3 response");
             insert(exception.data(), "ua", "base", ua.base());
-            insert(exception.data(), "request", "url", request.address());
             json rj;
+            for (mime::mime_headers::const_iterator it(request.headers().begin());
+                    it != request.headers().end(); ++it) {
+                insert(rj, "headers", it->first, it->second.value());
+            }
+            insert(exception.data(), "request", rj);
+            insert(exception.data(), "request", "url", request.address());
+            rj = json();
+            insert(rj, "status", response->status());
             insert(rj, "body", "size", response->body()->data().size());
             insert(rj, "body", "data",
                 coerce<string>(response->body()->data()));
             for (mime::mime_headers::const_iterator it(response->headers().begin());
                     it != response->headers().end(); ++it) {
-                push_back(rj, "headers", it->first, it->second.value());
+                insert(rj, "headers", it->first, it->second.value());
             }
             insert(exception.data(), "response", rj);
             throw exception;
