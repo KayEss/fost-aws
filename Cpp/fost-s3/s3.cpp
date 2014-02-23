@@ -57,13 +57,8 @@ namespace {
     url base_url(const ascii_printable_string &bucket) {
         nullable<string> base(account_setting< string >(
             aws::s3::bucket::s_account_name.value(),  L"Base URL",  null));
-        if ( base.isnull() ) {
-            return url(coerce< string >(
-                ascii_printable_string("https://") + bucket +
-                    ascii_printable_string(".s3.amazonaws.com/")));
-        } else {
-            return url(url(base.value()), url::filepath_string(bucket + "/"));
-        }
+        return url(url(base.value("https://s3.amazonaws.com/")),
+            url::filepath_string(bucket + "/"));
     }
 }
 
