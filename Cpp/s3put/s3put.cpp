@@ -1,5 +1,5 @@
 /*
-    Copyright 2008-2014, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2008-2014, Felspar Co Ltd. http://support.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -24,6 +24,8 @@ FSL_MAIN(
         o << "Must supply at least one file and a bucket name and an S3 location to put it to" << std::endl;
         return 1;
     }
+    args.commandSwitch("a", aws::s3::bucket::s_account_name.section(),
+        aws::s3::bucket::s_account_name.name());
     // Create the bucket object
     aws::s3::bucket bucket(coerce< ascii_printable_string >( args[2] ));
     // Local file information
@@ -44,3 +46,4 @@ FSL_MAIN(
         o << L"The remote file already exists and is identical to the local file. No file has been uploaded" << std::endl;
     return 0;
 }
+

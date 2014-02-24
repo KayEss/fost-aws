@@ -1,3 +1,6 @@
+2014-02-24  Kirit Saelensminde  <kirit@felspar.com>
+ The account to use can now be passed to s3put with -a.
+
 2014-02-23  Kirit Saelensminde  <kirit@felspar.com>
  Added support for Swift as well as S3.
 
