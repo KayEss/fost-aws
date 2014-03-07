@@ -88,7 +88,7 @@ namespace fostlib {
                     outcome get(const boost::filesystem::wpath &location,
                         const boost::filesystem::wpath &file) const;
                     /// Send the specified file to the requested location on S3
-                    void put(const boost::filesystem::wpath &file,
+                    outcome put(const boost::filesystem::wpath &file,
                         const boost::filesystem::wpath &location) const;
             };
 
