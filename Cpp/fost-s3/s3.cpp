@@ -18,6 +18,19 @@ using namespace fostlib;
 using namespace fostlib::aws::s3;
 
 
+namespace {
+    nullable< string > etag(const boost::filesystem::wpath &file) {
+        if ( boost::filesystem::exists(file) ) {
+            digester md5_digest(md5);
+            md5_digest << file;
+            return coerce< string >(coerce< hex_string >(md5_digest.digest()));
+        } else {
+            return null;
+        }
+    }
+}
+
+
 /*
     fostlib::aws::s3::bucket
 */
@@ -83,9 +96,20 @@ file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &locatio
 }
 
 
-void fostlib::aws::s3::bucket::get(
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
     const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
 ) const {
+    nullable< string > local(etag(file));
+    if ( !local.isnull() ) {
+        file_info remote(stat(location));
+        if ( !remote.exists() ) {
+            throw exceptions::unexpected_eof("There is a local file already, but no remote file");
+        }
+        if ( remote.md5() == local.value() || remote.md5() == "\"" + local.value() + "\"" ) {
+            // We already have the same file locally
+            return e_match;
+        }
+    }
     http::user_agent::request request("GET", uri(location));
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
@@ -100,6 +124,7 @@ void fostlib::aws::s3::bucket::get(
     stream.write(
         reinterpret_cast<const char *>(response->body()->data().data()),
         response->body()->data().size());
+    return e_executed;
 }
 
 

@@ -24,6 +24,14 @@ namespace fostlib {
         namespace s3 {
 
 
+            /// The actions that might be taken with S3 files
+            typedef enum {
+                /// The requested action was performed
+                e_executed,
+                /// The action was not performed because the files match
+                e_match
+            } outcome;
+
             /// Implements the authentication signature for requests
             void FOST_AWS_DECLSPEC rest_authentication(
                 const string &account, const ascii_printable_string &bucket,
@@ -77,7 +85,7 @@ namespace fostlib {
                     file_info stat(const boost::filesystem::wpath &) const;
 
                     /// Fetch the requested file and save to the file system
-                    void get(const boost::filesystem::wpath &location,
+                    outcome get(const boost::filesystem::wpath &location,
                         const boost::filesystem::wpath &file) const;
                     /// Send the specified file to the requested location on S3
                     void put(const boost::filesystem::wpath &file,
