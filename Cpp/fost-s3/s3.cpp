@@ -81,6 +81,7 @@ void fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const b
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
+        case 201:
             break;
         default:
             exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
