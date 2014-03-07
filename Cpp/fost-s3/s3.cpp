@@ -71,15 +71,37 @@ fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
 }
 
 
+url fostlib::aws::s3::bucket::uri(const boost::filesystem::wpath &location) const {
+    return url(m_ua.base(), m_ua.base().pathspec() +
+        coerce<url::filepath_string>(location));
+}
+
+
 file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &location) const {
     return file_info(m_ua, name(), location);
 }
 
 
-    http::user_agent::request request("PUT", url(m_ua.base(), m_ua.base().pathspec() +coerce<url::filepath_string>(location)), file);
+void fostlib::aws::s3::bucket::get(
+    const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
+) const {
+    http::user_agent::request request("GET", uri(location));
+    std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+    switch ( response->status() ) {
+        case 200:
+            break;
+        default:
+            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+            exception.info() << response->body() << std::endl;
+            throw exception;
+    }
+}
+
+
 void fostlib::aws::s3::bucket::put(
     const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
 ) const {
+    http::user_agent::request request("PUT", uri(location), file);
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:

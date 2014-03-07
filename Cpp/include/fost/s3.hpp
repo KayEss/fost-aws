@@ -60,6 +60,9 @@ namespace fostlib {
             /// Represents a bucket on S3 or a container on Swift
             class FOST_AWS_DECLSPEC bucket {
                 http::user_agent m_ua;
+                /// Return the URL for the bucket for the requested location
+                url uri(const boost::filesystem::wpath &location) const;
+
                 public:
                     /// Use to override the default account name
                     static const setting< string > s_account_name;
@@ -73,6 +76,9 @@ namespace fostlib {
                     /// Return file information about the requested path on S3
                     file_info stat(const boost::filesystem::wpath &) const;
 
+                    /// Fetch the requested file and save to the file system
+                    void get(const boost::filesystem::wpath &location,
+                        const boost::filesystem::wpath &file) const;
                     /// Send the specified file to the requested location on S3
                     void put(const boost::filesystem::wpath &file,
                         const boost::filesystem::wpath &location) const;
