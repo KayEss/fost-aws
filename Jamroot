@@ -8,6 +8,12 @@ fost-project fost-aws :
         <include>../fost-internet/Cpp/include
     ;
 
+alias aws :
+        Cpp/s3get
+        Cpp/s3put
+    ;
+explicit aws ;
+
 alias docs :
         Docs
     ;
@@ -21,7 +27,6 @@ alias fost :
         ../fost-base//fost
         ../fost-internet//fost
         Cpp/fost-s3
-        Cpp/s3put
     ;
 
 alias tests :
