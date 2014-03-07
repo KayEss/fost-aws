@@ -10,6 +10,7 @@
 #include <fost/insert>
 #include <fost/s3.hpp>
 
+#include <boost/filesystem/fstream.hpp>
 #include <boost/lambda/bind.hpp>
 
 
@@ -95,6 +96,10 @@ void fostlib::aws::s3::bucket::get(
             exception.info() << response->body() << std::endl;
             throw exception;
     }
+    boost::filesystem::ofstream stream(file, std::ios::binary);
+    stream.write(
+        reinterpret_cast<const char *>(response->body()->data().data()),
+        response->body()->data().size());
 }
 
 
