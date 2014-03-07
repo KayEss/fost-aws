@@ -76,8 +76,10 @@ file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &locatio
 }
 
 
-void fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const {
     http::user_agent::request request("PUT", url(m_ua.base(), m_ua.base().pathspec() +coerce<url::filepath_string>(location)), file);
+void fostlib::aws::s3::bucket::put(
+    const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
+) const {
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
