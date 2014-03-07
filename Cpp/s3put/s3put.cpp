@@ -26,24 +26,13 @@ FSL_MAIN(
     }
     args.commandSwitch("a", aws::s3::bucket::s_account_name.section(),
         aws::s3::bucket::s_account_name.name());
-    // Create the bucket object
     aws::s3::bucket bucket(coerce< ascii_printable_string >( args[2] ));
-    // Local file information
-    digester md5_digest(md5);
-    md5_digest << coerce< boost::filesystem::wpath >( args[1].value() );
-    string local_md5 = coerce< string >( coerce< hex_string >( md5_digest.digest() ) );
-    o << "Local file " << args[1].value() << " md5: " << local_md5 << std::endl;
-    // Remote file information
-    aws::s3::file_info remote(bucket.stat(coerce< boost::filesystem::wpath >( args[3].value() )));
-    o << "Remote file MD5 " << remote.md5().value(L"[No remote file MD5]") << std::endl;
-    // Decide if we're going to upload the file or not
-    if ( !remote.exists() ||
-            (remote.md5() != local_md5 && remote.md5() != L"\"" + local_md5 + L"\"") ) {
-        o << L"Uploading file..." << std::endl;
-        bucket.put(coerce< boost::filesystem::wpath >( args[1].value() ), remote.path());
-        o << L"Upload complete" << std::endl;
-    } else
-        o << L"The remote file already exists and is identical to the local file. No file has been uploaded" << std::endl;
+    if ( bucket.put(
+            coerce< boost::filesystem::wpath >(args[1].value()),
+            coerce< boost::filesystem::wpath >(args[3].value())) == aws::s3::e_match ) {
+        o << "No upload performed because the remote file is already "
+            "the same as the local one" << std::endl;
+    }
     return 0;
 }
 

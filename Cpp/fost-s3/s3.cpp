@@ -10,11 +10,25 @@
 #include <fost/insert>
 #include <fost/s3.hpp>
 
+#include <boost/filesystem/fstream.hpp>
 #include <boost/lambda/bind.hpp>
 
 
 using namespace fostlib;
 using namespace fostlib::aws::s3;
+
+
+namespace {
+    nullable< string > etag(const boost::filesystem::wpath &file) {
+        if ( boost::filesystem::exists(file) ) {
+            digester md5_digest(md5);
+            md5_digest << file;
+            return coerce< string >(coerce< hex_string >(md5_digest.digest()));
+        } else {
+            return null;
+        }
+    }
+}
 
 
 /*
@@ -71,21 +85,73 @@ fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
 }
 
 
+url fostlib::aws::s3::bucket::uri(const boost::filesystem::wpath &location) const {
+    return url(m_ua.base(), m_ua.base().pathspec() +
+        coerce<url::filepath_string>(location));
+}
+
+
 file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &location) const {
     return file_info(m_ua, name(), location);
 }
 
 
-void fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const {
-    http::user_agent::request request("PUT", url(m_ua.base(), m_ua.base().pathspec() +coerce<url::filepath_string>(location)), file);
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
+    const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
+) const {
+    nullable< string > local(etag(file));
+    if ( !local.isnull() ) {
+        file_info remote(stat(location));
+        if ( !remote.exists() ) {
+            throw exceptions::unexpected_eof("There is a local file already, but no remote file");
+        }
+        if ( remote.md5() == local.value() || remote.md5() == "\"" + local.value() + "\"" ) {
+            // We already have the same file locally
+            return e_match;
+        }
+    }
+    http::user_agent::request request("GET", uri(location));
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
             break;
         default:
-            exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
             exception.info() << response->body() << std::endl;
             throw exception;
+    }
+    boost::filesystem::ofstream stream(file, std::ios::binary);
+    stream.write(
+        reinterpret_cast<const char *>(response->body()->data().data()),
+        response->body()->data().size());
+    return e_executed;
+}
+
+
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
+    const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
+) const {
+    nullable< string > local(etag(file));
+    if ( local.isnull() ) {
+        throw exceptions::unexpected_eof("Local file could not be read");
+    }
+    aws::s3::file_info remote(stat(location));
+    if ( !remote.exists() ||
+            (remote.md5() != local.value() && remote.md5() != L"\"" + local.value() + L"\"") ) {
+        http::user_agent::request request("PUT", uri(location), file);
+        std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+        switch ( response->status() ) {
+            case 200:
+            case 201:
+                break;
+            default:
+                exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+                exception.info() << response->body() << std::endl;
+                throw exception;
+        }
+        return e_executed;
+    } else {
+        return e_match;
     }
 }
 

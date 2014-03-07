@@ -24,6 +24,15 @@ namespace fostlib {
         namespace s3 {
 
 
+            /// The actions that might be taken with S3 files
+            typedef enum {
+                /// The requested action was performed
+                e_executed,
+                /// The action was not performed because the files match
+                e_match
+            } outcome;
+
+            /// Implements the authentication signature for requests
             void FOST_AWS_DECLSPEC rest_authentication(
                 const string &account, const ascii_printable_string &bucket,
                 http::user_agent::request &request);
@@ -41,6 +50,7 @@ namespace fostlib {
             }
 
 
+            /// File information available from S3
             class FOST_AWS_DECLSPEC file_info {
                 boost::shared_ptr< http::user_agent::response > m_response;
                 public:
@@ -55,17 +65,30 @@ namespace fostlib {
             };
 
 
+            /// Represents a bucket on S3 or a container on Swift
             class FOST_AWS_DECLSPEC bucket {
                 http::user_agent m_ua;
+                /// Return the URL for the bucket for the requested location
+                url uri(const boost::filesystem::wpath &location) const;
+
                 public:
+                    /// Use to override the default account name
                     static const setting< string > s_account_name;
 
+                    /// Construct a bucket connection
                     bucket(const ascii_printable_string &name);
 
+                    /// The bucket name
                     accessors< const ascii_printable_string > name;
 
+                    /// Return file information about the requested path on S3
                     file_info stat(const boost::filesystem::wpath &) const;
-                    void put(const boost::filesystem::wpath &file,
+
+                    /// Fetch the requested file and save to the file system
+                    outcome get(const boost::filesystem::wpath &location,
+                        const boost::filesystem::wpath &file) const;
+                    /// Send the specified file to the requested location on S3
+                    outcome put(const boost::filesystem::wpath &file,
                         const boost::filesystem::wpath &location) const;
             };
 
