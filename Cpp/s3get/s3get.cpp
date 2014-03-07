@@ -28,7 +28,7 @@ FSL_MAIN(
     // Create the bucket object
     aws::s3::bucket bucket(coerce< ascii_printable_string >( args[1] ));
     if ( bucket.get(coerce<boost::filesystem::wpath>(args[2]),
-            coerce<boost::filesystem::wpath>(args[3])) == aws::s3::e_match) {
+            coerce<boost::filesystem::wpath>(args[3])) == aws::s3::e_match ) {
         o << "No download because the local file is already "
             "the same as the remote one" << std::endl;
     }
