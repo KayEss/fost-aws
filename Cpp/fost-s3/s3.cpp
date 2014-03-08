@@ -121,9 +121,11 @@ fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
             throw exception;
     }
     boost::filesystem::ofstream stream(file, std::ios::binary);
-    stream.write(
-        reinterpret_cast<const char *>(response->body()->data().data()),
-        response->body()->data().size());
+    if ( response->body()->data().size() != 0 ) {
+        stream.write(
+            reinterpret_cast<const char *>(&response->body()->data()[0]),
+            response->body()->data().size());
+    }
     return e_executed;
 }
 
