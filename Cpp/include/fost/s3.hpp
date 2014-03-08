@@ -1,5 +1,5 @@
 /*
-    Copyright 2009, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2009-2014, Felspar Co Ltd. http://fost.3.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -24,15 +24,39 @@ namespace fostlib {
         namespace s3 {
 
 
+            /// The actions that might be taken with S3 files
+            typedef enum {
+                /// The requested action was performed
+                e_executed,
+                /// The action was not performed because the files match
+                e_match
+            } outcome;
+
+            /// Implements the authentication signature for requests
             void FOST_AWS_DECLSPEC rest_authentication(
-                const string &account, const ascii_string &bucket, http::user_agent::request &request
-            );
+                const string &account, const ascii_printable_string &bucket,
+                http::user_agent::request &request);
 
 
+            /// Return the setting value of the requested type for the named account
+            template<typename V>
+            inline V account_setting(const string &account,  wliteral name) {
+                return setting<V>::value(L"S3 account/" + account, name);
+            }
+            /// Return the setting value of the requested type for the named account
+            template<typename V>
+            inline nullable<V> account_setting(const string &account,  wliteral name,  t_null) {
+                return setting<V>::value(L"S3 account/" + account, name,  null);
+            }
+
+
+            /// File information available from S3
             class FOST_AWS_DECLSPEC file_info {
                 boost::shared_ptr< http::user_agent::response > m_response;
                 public:
-                    file_info(const http::user_agent &, const ascii_string &bucket, const boost::filesystem::wpath &);
+                    file_info(const http::user_agent &,
+                        const ascii_printable_string &bucket,
+                        const boost::filesystem::wpath &);
 
                     accessors< const boost::filesystem::wpath > path;
 
@@ -40,17 +64,32 @@ namespace fostlib {
                     nullable< string > md5() const;
             };
 
+
+            /// Represents a bucket on S3 or a container on Swift
             class FOST_AWS_DECLSPEC bucket {
                 http::user_agent m_ua;
+                /// Return the URL for the bucket for the requested location
+                url uri(const boost::filesystem::wpath &location) const;
+
                 public:
+                    /// Use to override the default account name
                     static const setting< string > s_account_name;
 
-                    explicit bucket(const ascii_string &name);
+                    /// Construct a bucket connection
+                    bucket(const ascii_printable_string &name);
 
-                    accessors< const ascii_string > name;
+                    /// The bucket name
+                    accessors< const ascii_printable_string > name;
 
+                    /// Return file information about the requested path on S3
                     file_info stat(const boost::filesystem::wpath &) const;
-                    void put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const;
+
+                    /// Fetch the requested file and save to the file system
+                    outcome get(const boost::filesystem::wpath &location,
+                        const boost::filesystem::wpath &file) const;
+                    /// Send the specified file to the requested location on S3
+                    outcome put(const boost::filesystem::wpath &file,
+                        const boost::filesystem::wpath &location) const;
             };
 
 

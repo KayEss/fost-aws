@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2010, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2009-2014, Felspar Co Ltd. http://fost.3.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -7,13 +7,28 @@
 
 
 #include "fost-aws.hpp"
+#include <fost/insert>
 #include <fost/s3.hpp>
 
+#include <boost/filesystem/fstream.hpp>
 #include <boost/lambda/bind.hpp>
 
 
 using namespace fostlib;
 using namespace fostlib::aws::s3;
+
+
+namespace {
+    nullable< string > etag(const boost::filesystem::wpath &file) {
+        if ( boost::filesystem::exists(file) ) {
+            digester md5_digest(md5);
+            md5_digest << file;
+            return coerce< string >(coerce< hex_string >(md5_digest.digest()));
+        } else {
+            return null;
+        }
+    }
+}
 
 
 /*
@@ -22,27 +37,57 @@ using namespace fostlib::aws::s3;
 
 const setting< string > fostlib::aws::s3::bucket::s_account_name(
     "fost-internet/Cpp/fost-aws/s3.cpp",
-    "Amazon S3", "Default account name", "default", true
-);
+    "Amazon S3", "Default account name", "default", true);
 
 namespace {
-    std::auto_ptr< http::user_agent::response > s3do(const http::user_agent &ua, http::user_agent::request &request) {
+    std::auto_ptr< http::user_agent::response > s3do(
+        const http::user_agent &ua, http::user_agent::request &request
+    ) {
         std::auto_ptr< http::user_agent::response > response = ua(request);
         if ( response->status() == 403 ) {
-            exceptions::not_implemented exception("S3 request resulting in 403 forbidden");
-            exception.info() << response->body() << std::endl;
+            exceptions::not_implemented exception("S3 response");
+            insert(exception.data(), "ua", "base", ua.base());
+            json rj;
+            for (mime::mime_headers::const_iterator it(request.headers().begin());
+                    it != request.headers().end(); ++it) {
+                insert(rj, "headers", it->first, it->second.value());
+            }
+            insert(exception.data(), "request", rj);
+            insert(exception.data(), "request", "url", request.address());
+            rj = json();
+            insert(rj, "status", response->status());
+            insert(rj, "body", "size", response->body()->data().size());
+            insert(rj, "body", "data",
+                coerce<string>(response->body()->data()));
+            for (mime::mime_headers::const_iterator it(response->headers().begin());
+                    it != response->headers().end(); ++it) {
+                insert(rj, "headers", it->first, it->second.value());
+            }
+            insert(exception.data(), "response", rj);
             throw exception;
         }
         return response;
     }
+    url base_url(const ascii_printable_string &bucket) {
+        nullable<string> base(account_setting< string >(
+            aws::s3::bucket::s_account_name.value(),  L"Base URL",  null));
+        return url(url(base.value("https://s3.amazonaws.com/")),
+            url::filepath_string(bucket + "/"));
+    }
 }
 
 
-fostlib::aws::s3::bucket::bucket( const ascii_string &name )
-: m_ua(url(coerce< string >( ascii_string("https://") + name + ascii_string(".s3.amazonaws.com/") ))), name( name ) {
-    m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(boost::lambda::bind(
-        rest_authentication, s_account_name.value(), name, boost::lambda::_1
-    )));
+fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
+: m_ua(base_url(name)), name( name ) {
+    m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(
+            boost::lambda::bind(
+                rest_authentication, s_account_name.value(), name, boost::lambda::_1)));
+}
+
+
+url fostlib::aws::s3::bucket::uri(const boost::filesystem::wpath &location) const {
+    return url(m_ua.base(), m_ua.base().pathspec() +
+        coerce<url::filepath_string>(location));
 }
 
 
@@ -51,16 +96,64 @@ file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &locatio
 }
 
 
-void fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const {
-    http::user_agent::request request("PUT", url(m_ua.base(), location), file);
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
+    const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
+) const {
+    nullable< string > local(etag(file));
+    if ( !local.isnull() ) {
+        file_info remote(stat(location));
+        if ( !remote.exists() ) {
+            throw exceptions::unexpected_eof("There is a local file already, but no remote file");
+        }
+        if ( remote.md5() == local.value() || remote.md5() == "\"" + local.value() + "\"" ) {
+            // We already have the same file locally
+            return e_match;
+        }
+    }
+    http::user_agent::request request("GET", uri(location));
     std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
             break;
         default:
-            exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
             exception.info() << response->body() << std::endl;
             throw exception;
+    }
+    boost::filesystem::ofstream stream(file, std::ios::binary);
+    if ( response->body()->data().size() != 0 ) {
+        stream.write(
+            reinterpret_cast<const char *>(&response->body()->data()[0]),
+            response->body()->data().size());
+    }
+    return e_executed;
+}
+
+
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
+    const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
+) const {
+    nullable< string > local(etag(file));
+    if ( local.isnull() ) {
+        throw exceptions::unexpected_eof("Local file could not be read");
+    }
+    aws::s3::file_info remote(stat(location));
+    if ( !remote.exists() ||
+            (remote.md5() != local.value() && remote.md5() != L"\"" + local.value() + L"\"") ) {
+        http::user_agent::request request("PUT", uri(location), file);
+        std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+        switch ( response->status() ) {
+            case 200:
+            case 201:
+                break;
+            default:
+                exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+                exception.info() << response->body() << std::endl;
+                throw exception;
+        }
+        return e_executed;
+    } else {
+        return e_match;
     }
 }
 
@@ -76,8 +169,8 @@ namespace {
         return s3do(ua, r);
     }
 }
-fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_string &bucket, const boost::filesystem::wpath &location )
-: m_response( init_file_info(ua, url(ua.base(), location)).release() ), path( location ) {
+fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_printable_string &bucket, const boost::filesystem::wpath &location )
+: m_response( init_file_info(ua, url(ua.base(), ua.base().pathspec() + coerce<url::filepath_string>(location))).release() ), path( location ) {
     switch ( m_response->status() ) {
         case 200:
         case 404:
@@ -97,3 +190,4 @@ nullable< string > fostlib::aws::s3::file_info::md5() const {
     else
         return null;
 }
+
