@@ -130,31 +130,53 @@ fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
 }
 
 
-fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
+namespace {
+    aws::s3::outcome do_put(
+        const fostlib::aws::s3::bucket &bucket,
+        const http::user_agent &ua,
+        const string &hash,
+        const boost::filesystem::wpath &location,
+        http::user_agent::request &request
+    ) {
+        aws::s3::file_info remote(bucket.stat(location));
+        if ( !remote.exists() ||
+                (remote.md5() != hash && remote.md5() != L"\"" + hash + L"\"") ) {
+            std::auto_ptr< http::user_agent::response > response(s3do(ua, request));
+            switch ( response->status() ) {
+                case 200:
+                case 201:
+                    break;
+                default:
+                    exceptions::not_implemented exception(
+                        L"fostlib::aws::s3::bucket::put("
+                            L"const boost::filesystem::wpath &file, "
+                            L"const boost::filesystem::wpath &location) const "
+                            L"-- with response status " +
+                        coerce< string >( response->status() ));
+                    exception.info() << response->body() << std::endl;
+                    throw exception;
+            }
+            return e_executed;
+        } else {
+            return e_match;
+        }
+    }
+}
+aws::s3::outcome fostlib::aws::s3::bucket::put(
     const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
 ) const {
     nullable< string > local(etag(file));
     if ( local.isnull() ) {
         throw exceptions::unexpected_eof("Local file could not be read");
     }
-    aws::s3::file_info remote(stat(location));
-    if ( !remote.exists() ||
-            (remote.md5() != local.value() && remote.md5() != L"\"" + local.value() + L"\"") ) {
-        http::user_agent::request request("PUT", uri(location), file);
-        std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
-        switch ( response->status() ) {
-            case 200:
-            case 201:
-                break;
-            default:
-                exceptions::not_implemented exception(L"fostlib::aws::s3::bucket::put(const boost::filesystem::wpath &file, const boost::filesystem::wpath &location) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
-                exception.info() << response->body() << std::endl;
-                throw exception;
-        }
-        return e_executed;
-    } else {
-        return e_match;
-    }
+    http::user_agent::request request("PUT", uri(location), file);
+    return do_put(*this, m_ua, local.value(), location, request);
+}
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
+    const string &text, const boost::filesystem::wpath &location
+) const {
+    http::user_agent::request request("PUT", uri(location), text);
+    return do_put(*this, m_ua, md5(text), location, request);
 }
 
 
