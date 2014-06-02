@@ -8,6 +8,7 @@
 
 #include "fost-aws.hpp"
 #include <fost/insert>
+#include <fost/log>
 #include <fost/s3.hpp>
 
 #include <boost/filesystem/fstream.hpp>
@@ -47,25 +48,24 @@ namespace {
         if ( response->status() == 403 ) {
             exceptions::not_implemented exception("S3 response");
             insert(exception.data(), "ua", "base", ua.base());
-            json rj;
-            for (mime::mime_headers::const_iterator it(request.headers().begin());
-                    it != request.headers().end(); ++it) {
-                insert(rj, "headers", it->first, it->second.value());
-            }
-            insert(exception.data(), "request", rj);
+            insert(exception.data(), "request", "method", request.method());
             insert(exception.data(), "request", "url", request.address());
-            rj = json();
+            insert(exception.data(), "request", "headers", request.headers());
+            json rj;
             insert(rj, "status", response->status());
             insert(rj, "body", "size", response->body()->data().size());
             insert(rj, "body", "data",
                 coerce<string>(response->body()->data()));
-            for (mime::mime_headers::const_iterator it(response->headers().begin());
-                    it != response->headers().end(); ++it) {
-                insert(rj, "headers", it->first, it->second.value());
-            }
+            insert(rj, "headers", response->headers());
             insert(exception.data(), "response", rj);
             throw exception;
         }
+        fostlib::log::debug()
+            ("s3req", "method", request.method())
+            ("s3req", "url", request.address())
+            ("s3req", "headers", request.headers())
+            ("s3req", "response-status", response->status())
+            ("s3req", "response-headers", response->headers());
         return response;
     }
     url base_url(const ascii_printable_string &bucket) {

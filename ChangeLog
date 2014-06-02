@@ -1,5 +1,6 @@
 2014-06-02  Kirit Saelensminde  <kirit@felspar.com>
  Refactor the put method so that it's possible to send in-memory data.
+ Fixed a bug in the authentication when there are sub-values on the Content-Type header.
 
 2014-03-07  Kirit Saelensminde  <kirit@felspar.com>
  Added s3get to fetch files and refactored the s3put command to move the logic of where the upload decision happens.

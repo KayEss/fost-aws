@@ -28,7 +28,7 @@ void fostlib::aws::s3::rest_authentication(
     signature << "\n";
 
     if ( request.headers().exists("Content-Type") ) {
-        signature << request.headers()["Content-Type"].value();
+        signature << coerce<string>(request.headers()["Content-Type"]);
     }
     signature << "\n";
 
