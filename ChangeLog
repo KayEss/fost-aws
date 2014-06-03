@@ -1,3 +1,6 @@
+2014-06-03  Kirit Saelensminde  <kirit@felspar.com>
+ Add an API for fetching a resource from S3/Swift that is then turned into a string for internal processing.
+
 2014-06-02  Kirit Saelensminde  <kirit@felspar.com>
  Refactor the put method so that it's possible to send in-memory data.
  Fixed a bug in the authentication when there are sub-values on the Content-Type header.

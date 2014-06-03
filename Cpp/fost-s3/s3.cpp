@@ -96,7 +96,24 @@ file_info fostlib::aws::s3::bucket::stat(const boost::filesystem::wpath &locatio
 }
 
 
-fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
+fostlib::string fostlib::aws::s3::bucket::get(
+    const boost::filesystem::wpath &location
+) const {
+    http::user_agent::request request("GET", uri(location));
+    std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+    switch ( response->status() ) {
+        case 200:
+            break;
+        default:
+            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
+            exception.info() << response->body() << std::endl;
+            throw exception;
+    }
+    return coerce<string>(response->body()->data());
+}
+
+
+aws::s3::outcome fostlib::aws::s3::bucket::get(
     const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
 ) const {
     nullable< string > local(etag(file));
