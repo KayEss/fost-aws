@@ -84,9 +84,14 @@ namespace fostlib {
                     /// Return file information about the requested path on S3
                     file_info stat(const boost::filesystem::wpath &) const;
 
+                    /// Fetch the requested resource and convert to a string
+                    string get(const boost::filesystem::wpath &location) const;
                     /// Fetch the requested file and save to the file system
                     outcome get(const boost::filesystem::wpath &location,
                         const boost::filesystem::wpath &file) const;
+                    /// Send the specified text to the requested location on S3
+                    outcome put(const string &text,
+                        const boost::filesystem::wpath &location) const;
                     /// Send the specified file to the requested location on S3
                     outcome put(const boost::filesystem::wpath &file,
                         const boost::filesystem::wpath &location) const;
