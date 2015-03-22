@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2014, Felspar Co Ltd. http://fost.3.felspar.com/
+    Copyright 2009-2015, Felspar Co Ltd. http://support.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -55,7 +55,7 @@ namespace {
             insert(rj, "status", response->status());
             insert(rj, "body", "size", response->body()->data().size());
             insert(rj, "body", "data",
-                coerce<string>(response->body()->data()));
+                coerce<string>(coerce<utf8_string>(response->body()->data())));
             insert(rj, "headers", response->headers());
             insert(exception.data(), "response", rj);
             throw exception;
@@ -109,7 +109,7 @@ fostlib::string fostlib::aws::s3::bucket::get(
             exception.info() << response->body() << std::endl;
             throw exception;
     }
-    return coerce<string>(response->body()->data());
+    return coerce<string>(coerce<utf8_string>(response->body()->data()));
 }
 
 
