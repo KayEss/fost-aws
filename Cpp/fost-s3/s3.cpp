@@ -41,10 +41,10 @@ const setting< string > fostlib::aws::s3::bucket::s_account_name(
     "Amazon S3", "Default account name", "default", true);
 
 namespace {
-    std::auto_ptr< http::user_agent::response > s3do(
+    auto s3do(
         const http::user_agent &ua, http::user_agent::request &request
     ) {
-        std::auto_ptr< http::user_agent::response > response = ua(request);
+        auto response = ua(request);
         if ( response->status() == 403 ) {
             exceptions::not_implemented exception("S3 response");
             insert(exception.data(), "ua", "base", ua.base());
@@ -100,7 +100,7 @@ fostlib::string fostlib::aws::s3::bucket::get(
     const boost::filesystem::wpath &location
 ) const {
     http::user_agent::request request("GET", uri(location));
-    std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+    auto response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
             break;
@@ -128,7 +128,7 @@ aws::s3::outcome fostlib::aws::s3::bucket::get(
         }
     }
     http::user_agent::request request("GET", uri(location));
-    std::auto_ptr< http::user_agent::response > response(s3do(m_ua, request));
+    auto response(s3do(m_ua, request));
     switch ( response->status() ) {
         case 200:
             break;
@@ -158,7 +158,7 @@ namespace {
         aws::s3::file_info remote(bucket.stat(location));
         if ( !remote.exists() ||
                 (remote.md5() != hash && remote.md5() != L"\"" + hash + L"\"") ) {
-            std::auto_ptr< http::user_agent::response > response(s3do(ua, request));
+            auto response(s3do(ua, request));
             switch ( response->status() ) {
                 case 200:
                 case 201:
@@ -203,7 +203,7 @@ fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
 
 
 namespace {
-    std::auto_ptr< http::user_agent::response > init_file_info(const http::user_agent &ua, const url &u) {
+    auto init_file_info(const http::user_agent &ua, const url &u) {
         http::user_agent::request r("HEAD", u);
         return s3do(ua, r);
     }
