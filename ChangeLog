@@ -1,3 +1,6 @@
+2015-05-10  Kirit Saelensminde  <kirit@felspar.com>
+ Remove explicit types to get rid of auto_ptr uses.
+
 2014-06-03  Kirit Saelensminde  <kirit@felspar.com>
  Add an API for fetching a resource from S3/Swift that is then turned into a string for internal processing.
 
