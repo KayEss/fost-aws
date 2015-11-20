@@ -1,3 +1,6 @@
+2015-11-20  Kirit Saelensminde  <kirit@felspar.com>
+ Removed use of deprecated Fost APIs.
+
 2015-05-10  Kirit Saelensminde  <kirit@felspar.com>
  Remove explicit types to get rid of auto_ptr uses.
 
