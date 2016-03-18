@@ -7,12 +7,13 @@
 
 
 #include "fost-aws.hpp"
-#include <fost/insert>
-#include <fost/log>
 #include <fost/s3.hpp>
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lambda/bind.hpp>
+
+#include <fost/insert>
+#include <fost/log>
 
 
 using namespace fostlib;
@@ -60,7 +61,7 @@ namespace {
             insert(exception.data(), "response", rj);
             throw exception;
         }
-        fostlib::log::debug()
+        fostlib::log::debug(c_fost_aws_s3)
             ("s3req", "method", request.method())
             ("s3req", "url", request.address())
             ("s3req", "headers", request.headers())
@@ -105,8 +106,8 @@ fostlib::string fostlib::aws::s3::bucket::get(
         case 200:
             break;
         default:
-            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
-            exception.info() << response->body() << std::endl;
+            exceptions::not_implemented exception(__FUNCTION__);
+            insert(exception.data(), "response", "status", response->status());
             throw exception;
     }
     return coerce<string>(coerce<utf8_string>(response->body()->data()));
@@ -133,8 +134,8 @@ aws::s3::outcome fostlib::aws::s3::bucket::get(
         case 200:
             break;
         default:
-            exceptions::not_implemented exception("fostlib::aws::s3::bucket::get(const boost::filesystem::wpath &location, const boost::filesystem::wpath &file) const -- with response status " + fostlib::coerce< fostlib::string >( response->status() ));
-            exception.info() << response->body() << std::endl;
+            exceptions::not_implemented exception(__FUNCTION__);
+            insert(exception.data(), "response", "status", response->status());
             throw exception;
     }
     boost::filesystem::ofstream stream(file, std::ios::binary);
@@ -164,13 +165,8 @@ namespace {
                 case 201:
                     break;
                 default:
-                    exceptions::not_implemented exception(
-                        L"fostlib::aws::s3::bucket::put("
-                            L"const boost::filesystem::wpath &file, "
-                            L"const boost::filesystem::wpath &location) const "
-                            L"-- with response status " +
-                        coerce< string >( response->status() ));
-                    exception.info() << response->body() << std::endl;
+                    exceptions::not_implemented exception(__FUNCTION__);
+                    insert(exception.data(), "response", "status", response->status());
                     throw exception;
             }
             return e_executed;
@@ -215,7 +211,9 @@ fostlib::aws::s3::file_info::file_info(const http::user_agent &ua, const ascii_p
         case 404:
             break;
         default:
-            throw fostlib::exceptions::not_implemented("fostlib::aws::s3::file_info::file_info( const fostlib::aws::s3::bucket &bucket, const boost::filesystem::wpath &location ) -- with status code", fostlib::coerce< fostlib::string >( m_response->status() ));
+            exceptions::not_implemented exception(__FUNCTION__);
+            insert(exception.data(), "response", "status", m_response->status());
+            throw exception;
     }
 }
 
