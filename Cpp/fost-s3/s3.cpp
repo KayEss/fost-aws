@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2015, Felspar Co Ltd. http://support.felspar.com/
+    Copyright 2009-2016, Felspar Co Ltd. http://support.felspar.com/
     Distributed under the Boost Software License, Version 1.0.
     See accompanying file LICENSE_1_0.txt or copy at
         http://www.boost.org/LICENSE_1_0.txt
@@ -72,7 +72,7 @@ namespace {
     url base_url(const ascii_printable_string &bucket) {
         nullable<string> base(account_setting< string >(
             aws::s3::bucket::s_account_name.value(),  L"Base URL",  null));
-        return url(url(base.value("https://s3.amazonaws.com/")),
+        return url(url(base.value_or("https://s3.amazonaws.com/")),
             url::filepath_string(bucket + "/"));
     }
 }
@@ -118,7 +118,7 @@ aws::s3::outcome fostlib::aws::s3::bucket::get(
     const boost::filesystem::wpath &location, const boost::filesystem::wpath &file
 ) const {
     nullable< string > local(etag(file));
-    if ( !local.isnull() ) {
+    if ( local ) {
         file_info remote(stat(location));
         if ( !remote.exists() ) {
             throw exceptions::unexpected_eof("There is a local file already, but no remote file");
@@ -179,7 +179,7 @@ aws::s3::outcome fostlib::aws::s3::bucket::put(
     const boost::filesystem::wpath &file, const boost::filesystem::wpath &location
 ) const {
     nullable< string > local(etag(file));
-    if ( local.isnull() ) {
+    if ( not local ) {
         throw exceptions::unexpected_eof("Local file could not be read");
     }
     http::user_agent::request request("PUT", uri(location), file);
