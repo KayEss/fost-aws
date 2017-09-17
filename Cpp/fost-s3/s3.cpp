@@ -79,10 +79,10 @@ namespace {
 
 
 fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
-: m_ua(base_url(name)), name( name ) {
-    m_ua.authentication(boost::function< void ( http::user_agent::request & ) >(
-            boost::lambda::bind(
-                rest_authentication, s_account_name.value(), name, boost::lambda::_1)));
+: m_ua(base_url(name)), name(name) {
+    m_ua.authentication([name](auto &rq) {
+        rest_authentication(s_account_name.value(), name, rq);
+    });
 }
 
 
