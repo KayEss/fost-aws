@@ -1,1 +1,1 @@
-add_subdirectory(Cpp/fost-s3)
+add_subdirectory(Cpp)
