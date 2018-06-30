@@ -1,8 +1,0 @@
-
-fost-exe s3put
-    :
-        ../../../fost-base/Cpp/fost-crypto
-        ../../../fost-internet/Cpp/fost-inet
-        ../fost-s3
-        s3put.cpp
-    ;
