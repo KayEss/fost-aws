@@ -34,34 +34,40 @@ namespace fostlib {
 
             /// Implements the authentication signature for requests
             void FOST_AWS_DECLSPEC rest_authentication(
-                const string &account, const ascii_printable_string &bucket,
-                http::user_agent::request &request);
+                    const string &account,
+                    const ascii_printable_string &bucket,
+                    http::user_agent::request &request);
 
 
-            /// Return the setting value of the requested type for the named account
+            /// Return the setting value of the requested type for the named
+            /// account
             template<typename V>
-            inline V account_setting(const string &account,  wliteral name) {
+            inline V account_setting(const string &account, wliteral name) {
                 return setting<V>::value(L"S3 account/" + account, name);
             }
-            /// Return the setting value of the requested type for the named account
+            /// Return the setting value of the requested type for the named
+            /// account
             template<typename V>
-            inline nullable<V> account_setting(const string &account,  wliteral name,  t_null) {
-                return setting<V>::value(L"S3 account/" + account, name,  null);
+            inline nullable<V> account_setting(
+                    const string &account, wliteral name, t_null) {
+                return setting<V>::value(L"S3 account/" + account, name, null);
             }
 
 
             /// File information available from S3
             class FOST_AWS_DECLSPEC file_info {
-                boost::shared_ptr< http::user_agent::response > m_response;
-                public:
-                    file_info(const http::user_agent &,
+                boost::shared_ptr<http::user_agent::response> m_response;
+
+              public:
+                file_info(
+                        const http::user_agent &,
                         const ascii_printable_string &bucket,
                         const boost::filesystem::wpath &);
 
-                    accessors< const boost::filesystem::wpath > path;
+                accessors<const boost::filesystem::wpath> path;
 
-                    bool exists() const;
-                    nullable< string > md5() const;
+                bool exists() const;
+                nullable<string> md5() const;
             };
 
 
@@ -71,30 +77,33 @@ namespace fostlib {
                 /// Return the URL for the bucket for the requested location
                 url uri(const boost::filesystem::wpath &location) const;
 
-                public:
-                    /// Use to override the default account name
-                    static const setting< string > s_account_name;
+              public:
+                /// Use to override the default account name
+                static const setting<string> s_account_name;
 
-                    /// Construct a bucket connection
-                    bucket(const ascii_printable_string &name);
+                /// Construct a bucket connection
+                bucket(const ascii_printable_string &name);
 
-                    /// The bucket name
-                    accessors< const ascii_printable_string > name;
+                /// The bucket name
+                accessors<const ascii_printable_string> name;
 
-                    /// Return file information about the requested path on S3
-                    file_info stat(const boost::filesystem::wpath &) const;
+                /// Return file information about the requested path on S3
+                file_info stat(const boost::filesystem::wpath &) const;
 
-                    /// Fetch the requested resource and convert to a string
-                    string get(const boost::filesystem::wpath &location) const;
-                    /// Fetch the requested file and save to the file system
-                    outcome get(const boost::filesystem::wpath &location,
-                        const boost::filesystem::wpath &file) const;
-                    /// Send the specified text to the requested location on S3
-                    outcome put(const string &text,
-                        const boost::filesystem::wpath &location) const;
-                    /// Send the specified file to the requested location on S3
-                    outcome put(const boost::filesystem::wpath &file,
-                        const boost::filesystem::wpath &location) const;
+                /// Fetch the requested resource and convert to a string
+                string get(const boost::filesystem::wpath &location) const;
+                /// Fetch the requested file and save to the file system
+                outcome
+                        get(const boost::filesystem::wpath &location,
+                            const boost::filesystem::wpath &file) const;
+                /// Send the specified text to the requested location on S3
+                outcome
+                        put(const string &text,
+                            const boost::filesystem::wpath &location) const;
+                /// Send the specified file to the requested location on S3
+                outcome
+                        put(const boost::filesystem::wpath &file,
+                            const boost::filesystem::wpath &location) const;
             };
 
 

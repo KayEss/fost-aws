@@ -7,9 +7,9 @@
 
 
 #ifdef FOST_OS_WINDOWS
-    #define FOST_AWS_DECLSPEC __declspec( dllexport )
+#define FOST_AWS_DECLSPEC __declspec(dllexport)
 #else
-    #define FOST_AWS_DECLSPEC
+#define FOST_AWS_DECLSPEC
 #endif
 
 
@@ -19,4 +19,3 @@
 namespace fostlib {
     extern const module c_fost_aws_s3;
 }
-
