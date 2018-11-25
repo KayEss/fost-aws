@@ -15,4 +15,3 @@ namespace {
 
 
 extern const fostlib::module fostlib::c_fost_aws_s3(c_fost_aws, "s3");
-
