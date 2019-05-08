@@ -1,8 +1,8 @@
-/*
-    Copyright 2009-2014, Felspar Co Ltd. http://fost.3.felspar.com/
+/**
+    Copyright 2009-2019, Felspar Co Ltd. <http://support.felspar.com/>
+
     Distributed under the Boost Software License, Version 1.0.
-    See accompanying file LICENSE_1_0.txt or copy at
-        http://www.boost.org/LICENSE_1_0.txt
+    See <http://www.boost.org/LICENSE_1_0.txt>
 */
 
 
@@ -10,15 +10,11 @@
 #include <fost/s3.hpp>
 
 
-using namespace fostlib;
-using namespace fostlib::aws::s3;
-
-
 void fostlib::aws::s3::rest_authentication(
         const string &account,
         const ascii_printable_string &bucket,
         http::user_agent::request &request) {
-    hmac signature(sha1, account_setting<string>(account, L"API secret"));
+    hmac signature(sha1, account_setting<string>(account, "API secret"));
 
     signature << request.method() << "\n";
 
@@ -38,6 +34,6 @@ void fostlib::aws::s3::rest_authentication(
 
     request.headers().set(
             "Authorization",
-            L"AWS " + account_setting<string>(account, L"API key") + L":"
+            "AWS " + account_setting<string>(account, "API key") + ":"
                     + coerce<string>(coerce<base64_string>(signature.digest())));
 }
