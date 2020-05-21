@@ -21,7 +21,8 @@ namespace {
         if (fostlib::fs::exists(file)) {
             fostlib::digester md5_digest(fostlib::md5);
             md5_digest << file;
-            return fostlib::coerce<fostlib::string>(fostlib::coerce<fostlib::hex_string>(md5_digest.digest()));
+            return fostlib::coerce<fostlib::string>(
+                    fostlib::coerce<fostlib::hex_string>(md5_digest.digest()));
         } else {
             return {};
         }
@@ -41,7 +42,9 @@ fostlib::setting<fostlib::string> const fostlib::aws::s3::bucket::s_account_name
         true);
 
 namespace {
-    auto s3do(fostlib::http::user_agent const &ua, fostlib::http::user_agent::request &request) {
+    auto
+            s3do(fostlib::http::user_agent const &ua,
+                 fostlib::http::user_agent::request &request) {
         auto response = ua(request);
         if (response->status() == 403) {
             fostlib::exceptions::not_implemented exception{"S3 response"};
@@ -57,16 +60,19 @@ namespace {
             insert(exception.data(), "response", rj);
             throw exception;
         }
-        fostlib::log::debug(fostlib::c_fost_aws_s3)("s3req", "method", request.method())(
-                "s3req", "url",
-                request.address())("s3req", "headers", request.headers())(
+        fostlib::log::debug(fostlib::c_fost_aws_s3)(
+                "s3req", "method",
+                request.method())("s3req", "url", request.address())(
+                "s3req", "headers", request.headers())(
                 "s3req", "response-status", response->status())(
                 "s3req", "response-headers", response->headers());
         return response;
     }
     fostlib::url base_url(fostlib::ascii_printable_string const &bucket) {
-        fostlib::nullable<fostlib::string> base(fostlib::aws::s3::account_setting<fostlib::string>(
-                fostlib::aws::s3::bucket::s_account_name.value(), L"Base URL", fostlib::null));
+        fostlib::nullable<fostlib::string> base(
+                fostlib::aws::s3::account_setting<fostlib::string>(
+                        fostlib::aws::s3::bucket::s_account_name.value(),
+                        L"Base URL", fostlib::null));
         return fostlib::url(
                 fostlib::url(base.value_or("https://s3.amazonaws.com/")),
                 fostlib::url::filepath_string(bucket + "/"));
@@ -161,7 +167,8 @@ namespace {
             case 200:
             case 201: break;
             default:
-                fostlib::exceptions::not_implemented exception{__PRETTY_FUNCTION__};
+                fostlib::exceptions::not_implemented exception{
+                        __PRETTY_FUNCTION__};
                 insert(exception.data(), "response", "status",
                        response->status());
                 throw exception;
@@ -195,7 +202,8 @@ fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
 
 
 namespace {
-    auto init_file_info(const fostlib::http::user_agent &ua, const fostlib::url &u) {
+    auto init_file_info(
+            const fostlib::http::user_agent &ua, const fostlib::url &u) {
         fostlib::http::user_agent::request r("HEAD", u);
         return s3do(ua, r);
     }

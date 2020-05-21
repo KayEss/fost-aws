@@ -44,14 +44,17 @@ namespace fostlib {
             /// TODO deprecated
             template<typename V>
             inline V account_setting(const string &account, wliteral name) {
-                return setting<V>::value("S3 account/" + account, transitional_stringify(name));
+                return setting<V>::value(
+                        "S3 account/" + account, transitional_stringify(name));
             }
             /// Return the setting value of the requested type for the named
             /// account
             template<typename V>
             inline nullable<V> account_setting(
                     const string &account, wliteral name, t_null) {
-                return setting<V>::value("S3 account/" + account, transitional_stringify(name), null);
+                return setting<V>::value(
+                        "S3 account/" + account, transitional_stringify(name),
+                        null);
             }
 
 

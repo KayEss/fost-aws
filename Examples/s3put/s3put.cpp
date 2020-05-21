@@ -14,7 +14,8 @@
 
 FSL_MAIN(
         "s3put",
-        "Amazon S3 client -- push to S3\n" "Copyright (C) 2008-2020 Red Anchor Trading Co. Ltd.")
+        "Amazon S3 client -- push to S3\n"
+        "Copyright (C) 2008-2020 Red Anchor Trading Co. Ltd.")
 (fostlib::ostream &o, fostlib::arguments &args) {
     // Check we have the minimum number of command line arguments
     if (args.size() < 4) {
@@ -26,7 +27,8 @@ FSL_MAIN(
     args.commandSwitch(
             "a", fostlib::aws::s3::bucket::s_account_name.section(),
             fostlib::aws::s3::bucket::s_account_name.name());
-    fostlib::aws::s3::bucket bucket{fostlib::coerce<fostlib::ascii_printable_string>(args[2])};
+    fostlib::aws::s3::bucket bucket{
+            fostlib::coerce<fostlib::ascii_printable_string>(args[2])};
     if (bucket.put(
                 fostlib::coerce<fostlib::fs::path>(args[1].value()),
                 fostlib::coerce<fostlib::fs::path>(args[3].value()))
