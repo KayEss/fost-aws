@@ -1,5 +1,5 @@
 /**
-    Copyright 2009-2019 Red Anchor Trading Co. Ltd.
+    Copyright 2009-2020 Red Anchor Trading Co. Ltd.
 
     Distributed under the Boost Software License, Version 1.0.
     See <http://www.boost.org/LICENSE_1_0.txt>
@@ -8,10 +8,6 @@
 
 #include "fost-aws.hpp"
 #include <fost/s3.hpp>
-
-
-using namespace fostlib;
-using namespace fostlib::aws::s3;
 
 
 void fostlib::aws::s3::rest_authentication(
@@ -38,6 +34,6 @@ void fostlib::aws::s3::rest_authentication(
 
     request.headers().set(
             "Authorization",
-            L"AWS " + account_setting<string>(account, L"API key") + L":"
+            "AWS " + account_setting<string>(account, L"API key") + ":"
                     + coerce<string>(coerce<base64_string>(signature.digest())));
 }

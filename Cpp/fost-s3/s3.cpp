@@ -1,5 +1,5 @@
 /**
-    Copyright 2009-2019 Red Anchor Trading Co. Ltd.
+    Copyright 2009-2020 Red Anchor Trading Co. Ltd.
 
     Distributed under the Boost Software License, Version 1.0.
     See <http://www.boost.org/LICENSE_1_0.txt>
@@ -16,28 +16,24 @@
 #include <fost/log>
 
 
-using namespace fostlib;
-using namespace fostlib::aws::s3;
-
-
 namespace {
-    nullable<string> etag(const boost::filesystem::wpath &file) {
-        if (boost::filesystem::exists(file)) {
-            digester md5_digest(md5);
+    std::optional<fostlib::string> etag(fostlib::fs::path const &file) {
+        if (fostlib::fs::exists(file)) {
+            fostlib::digester md5_digest(fostlib::md5);
             md5_digest << file;
-            return coerce<string>(coerce<hex_string>(md5_digest.digest()));
+            return fostlib::coerce<fostlib::string>(fostlib::coerce<fostlib::hex_string>(md5_digest.digest()));
         } else {
-            return null;
+            return {};
         }
     }
 }
 
 
-/*
+/**
     fostlib::aws::s3::bucket
 */
 
-const setting<string> fostlib::aws::s3::bucket::s_account_name(
+fostlib::setting<fostlib::string> const fostlib::aws::s3::bucket::s_account_name(
         "fost-internet/Cpp/fost-aws/s3.cpp",
         "Amazon S3",
         "Default account name",
@@ -45,37 +41,35 @@ const setting<string> fostlib::aws::s3::bucket::s_account_name(
         true);
 
 namespace {
-    auto s3do(const http::user_agent &ua, http::user_agent::request &request) {
+    auto s3do(fostlib::http::user_agent const &ua, fostlib::http::user_agent::request &request) {
         auto response = ua(request);
         if (response->status() == 403) {
-            exceptions::not_implemented exception("S3 response");
+            fostlib::exceptions::not_implemented exception{"S3 response"};
             insert(exception.data(), "ua", "base", ua.base());
             insert(exception.data(), "request", "method", request.method());
             insert(exception.data(), "request", "url", request.address());
             insert(exception.data(), "request", "headers", request.headers());
-            json rj;
+            fostlib::json rj;
             insert(rj, "status", response->status());
             insert(rj, "body", "size", response->body()->data().size());
-            insert(rj, "body", "data",
-                   coerce<string>(
-                           coerce<utf8_string>(response->body()->data())));
+            insert(rj, "body", "data", response->body()->body_as_string());
             insert(rj, "headers", response->headers());
             insert(exception.data(), "response", rj);
             throw exception;
         }
-        fostlib::log::debug(c_fost_aws_s3)("s3req", "method", request.method())(
+        fostlib::log::debug(fostlib::c_fost_aws_s3)("s3req", "method", request.method())(
                 "s3req", "url",
                 request.address())("s3req", "headers", request.headers())(
                 "s3req", "response-status", response->status())(
                 "s3req", "response-headers", response->headers());
         return response;
     }
-    url base_url(const ascii_printable_string &bucket) {
-        nullable<string> base(account_setting<string>(
-                aws::s3::bucket::s_account_name.value(), L"Base URL", null));
-        return url(
-                url(base.value_or("https://s3.amazonaws.com/")),
-                url::filepath_string(bucket + "/"));
+    fostlib::url base_url(fostlib::ascii_printable_string const &bucket) {
+        fostlib::nullable<fostlib::string> base(fostlib::aws::s3::account_setting<fostlib::string>(
+                fostlib::aws::s3::bucket::s_account_name.value(), L"Base URL", fostlib::null));
+        return fostlib::url(
+                fostlib::url(base.value_or("https://s3.amazonaws.com/")),
+                fostlib::url::filepath_string(bucket + "/"));
     }
 }
 
@@ -88,7 +82,7 @@ fostlib::aws::s3::bucket::bucket(const ascii_printable_string &name)
 }
 
 
-url fostlib::aws::s3::bucket::uri(
+fostlib::url fostlib::aws::s3::bucket::uri(
         const boost::filesystem::wpath &location) const {
     return url(
             m_ua.base(),
@@ -96,7 +90,7 @@ url fostlib::aws::s3::bucket::uri(
 }
 
 
-file_info fostlib::aws::s3::bucket::stat(
+fostlib::aws::s3::file_info fostlib::aws::s3::bucket::stat(
         const boost::filesystem::wpath &location) const {
     return file_info(m_ua, name(), location);
 }
@@ -117,7 +111,7 @@ fostlib::string fostlib::aws::s3::bucket::get(
 }
 
 
-aws::s3::outcome fostlib::aws::s3::bucket::get(
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::get(
         const boost::filesystem::wpath &location,
         const boost::filesystem::wpath &file) const {
     nullable<string> local(etag(file));
@@ -153,32 +147,32 @@ aws::s3::outcome fostlib::aws::s3::bucket::get(
 
 
 namespace {
-    aws::s3::outcome
+    fostlib::aws::s3::outcome
             do_put(const fostlib::aws::s3::bucket &bucket,
-                   const http::user_agent &ua,
-                   const string &hash,
-                   const boost::filesystem::wpath &location,
-                   http::user_agent::request &request) {
-        aws::s3::file_info remote(bucket.stat(location));
+                   fostlib::http::user_agent const &ua,
+                   fostlib::string const &hash,
+                   fostlib::fs::path const &location,
+                   fostlib::http::user_agent::request &request) {
+        fostlib::aws::s3::file_info remote(bucket.stat(location));
         if (!remote.exists()
-            || (remote.md5() != hash && remote.md5() != L"\"" + hash + L"\"")) {
+            || (remote.md5() != hash && remote.md5() != "\"" + hash + "\"")) {
             auto response(s3do(ua, request));
             switch (response->status()) {
             case 200:
             case 201: break;
             default:
-                exceptions::not_implemented exception(__FUNCTION__);
+                fostlib::exceptions::not_implemented exception{__PRETTY_FUNCTION__};
                 insert(exception.data(), "response", "status",
                        response->status());
                 throw exception;
             }
-            return e_executed;
+            return fostlib::aws::s3::e_executed;
         } else {
-            return e_match;
+            return fostlib::aws::s3::e_match;
         }
     }
 }
-aws::s3::outcome fostlib::aws::s3::bucket::put(
+fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
         const boost::filesystem::wpath &file,
         const boost::filesystem::wpath &location) const {
     nullable<string> local(etag(file));
@@ -201,8 +195,8 @@ fostlib::aws::s3::outcome fostlib::aws::s3::bucket::put(
 
 
 namespace {
-    auto init_file_info(const http::user_agent &ua, const url &u) {
-        http::user_agent::request r("HEAD", u);
+    auto init_file_info(const fostlib::http::user_agent &ua, const fostlib::url &u) {
+        fostlib::http::user_agent::request r("HEAD", u);
         return s3do(ua, r);
     }
 }
@@ -221,7 +215,7 @@ fostlib::aws::s3::file_info::file_info(
     case 200:
     case 404: break;
     default:
-        exceptions::not_implemented exception(__FUNCTION__);
+        exceptions::not_implemented exception{__PRETTY_FUNCTION__};
         insert(exception.data(), "response", "status", m_response->status());
         throw exception;
     }
@@ -231,9 +225,9 @@ fostlib::aws::s3::file_info::file_info(
 bool fostlib::aws::s3::file_info::exists() const {
     return m_response->status() == 200;
 }
-nullable<string> fostlib::aws::s3::file_info::md5() const {
-    if (exists() && m_response->body()->headers().exists(L"ETag"))
-        return m_response->body()->headers()[L"ETag"].value();
+fostlib::nullable<fostlib::string> fostlib::aws::s3::file_info::md5() const {
+    if (exists() && m_response->body()->headers().exists("ETag"))
+        return m_response->body()->headers()["ETag"].value();
     else
         return null;
 }
